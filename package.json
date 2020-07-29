@@ -1,0 +1,21 @@
+{
+	"name": "nodejs-logger",
+	"version": "1.0.0",
+	"description": "NodeJS package for logging ",
+	"main": "index.js",
+	"scripts": {
+		"test": "test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ttonya/nodejs-logger.git"
+	},
+	"keywords": [
+		"logger",
+		"logging",
+		"nodejs",
+		"logs"
+	],
+	"author": "ttonya",
+	"license": "ISC"
+}
