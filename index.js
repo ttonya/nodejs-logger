@@ -1,23 +1,26 @@
 const fs = require("fs");
 
-let ent = " ";
-let entName = " ";
-let eventType = " ";
+let ent = " "; // entity
+let entName = " "; // entity name
+let eventType = " "; // event type
 
+// Get entity type and entity name
 let getEntityByUrl = (req, res, config) => {
 	try {
 		let entities = config.entities ? config.entities : {};
 		ent = Object.keys(entities).filter(
-			(entity) => req.url.indexOf(entity) !== -1
+			(entity) => req.url.indexOf(entity) !== -1 // Check if request url includes entity type
 		)[0];
 
-		let field = entities ? entities[ent] : "name";
+		let field = entities ? entities[ent] : "name"; // Default field is "name"
+
 		let result = res;
+
 		if (testJSON(res)) {
 			result = JSON.parse(res);
 		}
 
-		let data = result.data || result.response || result.result || result;
+		let data = result.data || result.response || result.result || result; // Checking what basic structure of response we have
 
 		entName =
 			data[field] ||
@@ -37,12 +40,12 @@ let getEntityByUrl = (req, res, config) => {
 	}
 };
 
+// Getting action type
 let getAction = (req, status) => {
 	let actionType = " ";
 
 	const methods = {
 		get: "read",
-		post: "create",
 		delete: "delete",
 		put: "edit",
 	};
@@ -55,12 +58,14 @@ let getAction = (req, status) => {
 		auth: ["login", "signin", "signup", "auth"],
 	};
 
+	// Checking if we can determine action type by http request method
 	Object.keys(methods).map((action) => {
 		if (req.method.toLowerCase() === action) {
-			actionType = action;
+			actionType = methods[action];
 		}
 	});
 
+	// Checking if we can find action type in request url
 	Object.keys(actions).map((action) => {
 		actions[action].map((type) => {
 			if (req.url.indexOf(type) !== -1) {
@@ -87,43 +92,49 @@ let writeToStdOut = (log) => {
 	console.log(log);
 };
 
+// main function
 let logger = async (req, res, config) => {
 	let possibleIp =
 		req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.ip;
-	let ip =
-		possibleIp.indexOf(":") !== -1
-			? possibleIp.split(":")[possibleIp.length - 1]
-			: possibleIp;
+	let ipArray =
+		possibleIp.indexOf(":") !== -1 ? possibleIp.split(":") : [possibleIp];
+	let ip = ipArray[ipArray.length - 1];
+
 	let date = new Date().toISOString();
-	let logType = "audit";
+	let logType = config.logType ? config.logType : "audit";
 
 	let reqUser = req.user ? req.user.email : " ";
 	let user = config.user || reqUser;
 
-	let isSuccess = res.statusCode === 200;
+	let isSuccess;
 
 	const defaultWrite = res.write;
 	const defaultEnd = res.end;
 	const chunks = [];
 
+	// saving async data
 	res.write = (...restArgs) => {
 		chunks.push(Buffer.from(restArgs[0]));
 		defaultWrite.apply(res, restArgs);
 	};
 
+	// on 'end' generating responseText from chunks and finishing all logic
 	res.end = (...restArgs) => {
 		if (restArgs[0]) {
 			chunks.push(Buffer.from(restArgs[0]));
 		}
 
+		isSuccess = res.statusCode >= 200 && res.statusCode <= 299;
+
 		let responseText = Buffer.concat(chunks).toString("utf8");
 		defaultEnd.apply(res, restArgs);
 
 		let field = config.field ? config.field : "name";
-		getAction(req, res.statusCode);
-		let message = getMessage(responseText, res.statusCode, field, req.url);
 
+		getAction(req, res.statusCode);
 		getEntityByUrl(req, responseText, config);
+
+		let message = getMessage(responseText, res.statusCode, field, req.url);
 
 		const log = `\n{"timestamp": "${date}", "log_type": "${logType}", "client_ip": "${ip}", "username": "${user}", "entity_type": "${ent}", "entity_name": "${entName}","event_type": "${eventType}", "event_message": "${message}", "event_success": "${isSuccess}"}`;
 
@@ -135,6 +146,7 @@ let logger = async (req, res, config) => {
 	};
 };
 
+// Getting message from response
 let getMessage = (res, statusCode, field, url) => {
 	let responseBody = " ";
 
@@ -150,13 +162,16 @@ let getMessage = (res, statusCode, field, url) => {
 
 			if (statusCode >= 200 && statusCode <= 299) {
 				if (result[field]) {
+					// if we have a field from config in the response
 					responseBody = result[field];
 				} else if (typeof resultData != "string" && resultData.length) {
+					// if we response data is array
 					responseBody = "Получение списка";
 				} else {
-					responseBody = url;
+					responseBody = url; // if we don't have a message to show, we display request url
 				}
 			} else {
+				// if we got an error
 				responseBody =
 					result.message || result.error || result.errorMessage || " ";
 			}
@@ -166,7 +181,7 @@ let getMessage = (res, statusCode, field, url) => {
 			}
 		}
 	} else {
-		if (typeof res != "string") {
+		if (typeof res != "string" || res.indexOf("!DOCTYPE") !== -1) {
 			responseBody = "Ошибка";
 		} else {
 			responseBody = res;
@@ -176,6 +191,7 @@ let getMessage = (res, statusCode, field, url) => {
 	return responseBody;
 };
 
+// Testing if response is JSON
 let testJSON = (data) => {
 	try {
 		JSON.parse(data);
