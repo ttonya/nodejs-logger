@@ -138,8 +138,10 @@ let logger = async (req, res, config) => {
 
 		const log = `\n{"timestamp": "${date}", "log_type": "${logType}", "client_ip": "${ip}", "username": "${user}", "entity_type": "${ent}", "entity_name": "${entName}","event_type": "${eventType}", "event_message": "${message}", "event_success": "${isSuccess}"}`;
 
+		let fileName = config.fileName ? config.fileName : "debug.log";
+
 		if (config.writeToFile) {
-			writeToFile(log, config.fileName);
+			writeToFile(log, fileName);
 		} else {
 			writeToStdOut(log);
 		}
