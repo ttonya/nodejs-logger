@@ -1,6 +1,6 @@
 {
 	"name": "the-butcher",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "NodeJS package for logging ",
 	"main": "index.js",
 	"scripts": {
