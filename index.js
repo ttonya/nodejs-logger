@@ -26,7 +26,7 @@ let getEntityByUrl = (req, res, config) => {
 
 		try {
 			result = JSON.parse(res);
-		} catch {
+		} catch (e) {
 			result = res;
 		}
 
@@ -204,7 +204,7 @@ let getMessage = (res, statusCode, field, req, requestDescription) => {
 				responseBody =
 					result.message || result.error || result.errorMessage || " ";
 			}
-		} catch {
+		} catch (e) {
 			if (typeof res != "string" || res.indexOf("!DOCTYPE") !== -1) {
 				responseBody = "Error";
 			} else {
