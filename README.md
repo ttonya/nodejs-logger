@@ -13,7 +13,7 @@ npm install the-butcher
 ## Usage
 
 ```javascript
-var logger = require("@svs/auditlog");
+var logger = require("the-butcher");
 
 // Config example
 const loggerConfig = {
@@ -31,7 +31,7 @@ const loggerConfig = {
 	file: "./src/debug.log", // (string) file you want your logs to be added to. If omitted, system will create 'debug.log' file in your root directory.
 	requestDescription: 'Something happend' || { 'deletetopic': text: "Delete topic", field: "id"  } /* (string) || (object) used to describe event
 	 in event_message. Result example -  'Something happend' || 'Delete topic 345'. Default - undefined */
-	 field: "name", /* (string) field to get entity name by. Default "name" */
+	field: "name", /* (string) field to get event message if requestDescription is omitted. Default "name" */
 };
 
 // add to Express.js
@@ -67,7 +67,7 @@ router.post('addcard', (req, res, next) => {
 	"timestamp": "2020-07-30T06:57:35.629Z",
 	"log_type": "audit",
 	"client_ip": "1",
-	"username": "ae.sypchenko",
+	"username": "ttonya",
 	"entity_type": "card",
 	"entity_name": "Some Card",
 	"event_type": "create",
@@ -79,7 +79,7 @@ router.post('addcard', (req, res, next) => {
 	"timestamp": "2020-07-30T06:57:35.629Z",
 	"log_type": "audit",
 	"client_ip": "1",
-	"username": "ae.sypchenko",
+	"username": "ttonya",
 	"entity_type": "card",
 	"entity_name": "New Card",
 	"event_type": "create",
